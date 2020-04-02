@@ -37,7 +37,7 @@
 #include "SimTKOpenMMRealType.h"
 #include <vector>
 #include <RealVec.h>
-#include "../../../gaussvol/gaussvol.h"
+#include "gaussvol.h"
 
 namespace OpenMM {
 

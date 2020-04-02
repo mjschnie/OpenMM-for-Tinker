@@ -50,6 +50,7 @@
 #include "openmm/internal/NonbondedForceImpl.h"
 #include "SimTKReference/AmoebaReferenceHippoNonbondedForce.h"
 
+
 #include <cmath>
 #ifdef _MSC_VER
 #include <windows.h>

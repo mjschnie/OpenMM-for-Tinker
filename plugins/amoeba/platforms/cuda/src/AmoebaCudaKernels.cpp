@@ -41,7 +41,7 @@
 #include "CudaForceInfo.h"
 #include "CudaKernelSources.h"
 #include "jama_lu.h"
-#include "../../../gaussvol/gaussvol.h"
+#include "../../reference/src/SimTKReference/gaussvol.h"
 
 #include <algorithm>
 #include <cmath>
