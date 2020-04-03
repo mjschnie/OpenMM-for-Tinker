@@ -59,7 +59,6 @@ using namespace OpenMM;
 #define ANG3 (0.001f)
 
 //volume cutoffs in switching function
-#define VOLMIN0 (0.009f*ANG3)
 #define VOLMINA (0.01f*ANG3)
 #define VOLMINB (0.1f*ANG3)
 
