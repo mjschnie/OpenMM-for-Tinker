@@ -36,6 +36,7 @@
 #include "openmm/KernelImpl.h"
 #include "openmm/System.h"
 #include "openmm/Platform.h"
+#include "AmoebaGKNPForce.h"
 
 #include <set>
 #include <string>
@@ -578,6 +579,39 @@ public:
      */
     virtual void getDPMEParameters(double& alpha, int& nx, int& ny, int& nz) const = 0;
 };
+
+/**
+ * This kernel is invoked by AmoebaGKNPForce to calculate the forces acting on the system and the energy of the system.
+ */
+    class CalcGKNPForceKernel : public OpenMM::KernelImpl {
+    public:
+        static std::string Name() {
+            return "CalcGKNPForce";
+        }
+        CalcGKNPForceKernel(std::string name, const OpenMM::Platform& platform) : OpenMM::KernelImpl(name, platform) {
+        }
+        /**
+         * Initialize the kernel.
+         *
+         * @param system     the System this kernel will be applied to
+         * @param force      the GKNPForce this kernel will be used for
+         */
+        virtual void initialize(const OpenMM::System& system, const AmoebaGKNPForce& force) = 0;
+        /**
+         * Execute the kernel to calculate the forces and/or energy.
+         *
+         * @param context        the context in which to execute this kernel
+         * @return the potential energy due to the force
+         */
+        virtual double execute(OpenMM::ContextImpl& context, bool includeForces, bool includeEnergy) = 0;
+        /**
+         * Copy changed parameters over to a context.
+         *
+         * @param context    the context to copy parameters to
+         * @param force      the GKNPForce to copy the parameters from
+         */
+        virtual void copyParametersToContext(OpenMM::ContextImpl& context, const AmoebaGKNPForce& force) = 0;
+    };
 
 } // namespace OpenMM
 

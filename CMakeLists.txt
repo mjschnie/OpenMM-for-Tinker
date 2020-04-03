@@ -250,7 +250,7 @@ IF(X86 AND NOT (WIN32 AND OPENMM_BUILD_STATIC_LIB))
 ENDIF()
 
 # If API wrappers are being generated, and add them to the build.
-SET(OPENMM_BUILD_C_AND_FORTRAN_WRAPPERS ON CACHE BOOL "Build wrappers for C and Fortran")
+SET(OPENMM_BUILD_C_AND_FORTRAN_WRAPPERS OFF CACHE BOOL "Build wrappers for C and Fortran")
 IF(OPENMM_BUILD_C_AND_FORTRAN_WRAPPERS)
     ADD_SUBDIRECTORY(wrappers)
     SET(SOURCE_FILES ${SOURCE_FILES} wrappers/OpenMMCWrapper.cpp  wrappers/OpenMMFortranWrapper.cpp)
@@ -437,7 +437,7 @@ SET_SOURCE_FILES_PROPERTIES(${serialization_files} PROPERTIES COMPILE_FLAGS "-DO
 
 # Python wrappers
 
-SET(OPENMM_BUILD_PYTHON_WRAPPERS ON CACHE BOOL "Build wrappers for Python")
+SET(OPENMM_BUILD_PYTHON_WRAPPERS OFF CACHE BOOL "Build wrappers for Python")
 IF(OPENMM_BUILD_PYTHON_WRAPPERS)
     IF(NOT OPENMM_BUILD_AMOEBA_PLUGIN)
         MESSAGE(SEND_ERROR "The Python wrappers require that the AMOEBA plugin be built.")
