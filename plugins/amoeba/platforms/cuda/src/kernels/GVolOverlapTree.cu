@@ -541,7 +541,7 @@ const ushort2* exclusionTiles,
     //OpenMM's neighbor list stores tiles with exclusions separately from other tiles
 
     // First loop: process tiles that contain exclusions
-    // (this is imposed by OpenMM's neighbor list format, GKNP does not actually have exclusions)
+    // (this is imposed by OpenMM's neighbor list format, GKCavitation does not actually have exclusions)
     const unsigned int firstExclusionTile = FIRST_EXCLUSION_TILE+warp*(LAST_EXCLUSION_TILE-FIRST_EXCLUSION_TILE)/totalWarps;
     const unsigned int lastExclusionTile = FIRST_EXCLUSION_TILE+(warp+1)*(LAST_EXCLUSION_TILE-FIRST_EXCLUSION_TILE)/totalWarps;
     for (int pos = firstExclusionTile; pos < lastExclusionTile; pos++) {

@@ -36,7 +36,7 @@
 #include "openmm/KernelImpl.h"
 #include "openmm/System.h"
 #include "openmm/Platform.h"
-#include "AmoebaGKNPForce.h"
+#include "AmoebaGKCavitationForce.h"
 
 #include <set>
 #include <string>
@@ -581,22 +581,22 @@ public:
 };
 
 /**
- * This kernel is invoked by AmoebaGKNPForce to calculate the forces acting on the system and the energy of the system.
+ * This kernel is invoked by AmoebaGKCavitationForce to calculate the forces acting on the system and the energy of the system.
  */
-    class CalcGKNPForceKernel : public OpenMM::KernelImpl {
+    class CalcGKCavitationForceKernel : public OpenMM::KernelImpl {
     public:
         static std::string Name() {
-            return "CalcGKNPForce";
+            return "CalcGKCavitationForce";
         }
-        CalcGKNPForceKernel(std::string name, const OpenMM::Platform& platform) : OpenMM::KernelImpl(name, platform) {
+        CalcGKCavitationForceKernel(std::string name, const OpenMM::Platform& platform) : OpenMM::KernelImpl(name, platform) {
         }
         /**
          * Initialize the kernel.
          *
          * @param system     the System this kernel will be applied to
-         * @param force      the GKNPForce this kernel will be used for
+         * @param force      the GKCavitationForce this kernel will be used for
          */
-        virtual void initialize(const OpenMM::System& system, const AmoebaGKNPForce& force) = 0;
+        virtual void initialize(const OpenMM::System& system, const AmoebaGKCavitationForce& force) = 0;
         /**
          * Execute the kernel to calculate the forces and/or energy.
          *
@@ -608,9 +608,9 @@ public:
          * Copy changed parameters over to a context.
          *
          * @param context    the context to copy parameters to
-         * @param force      the GKNPForce to copy the parameters from
+         * @param force      the GKCavitationForce to copy the parameters from
          */
-        virtual void copyParametersToContext(OpenMM::ContextImpl& context, const AmoebaGKNPForce& force) = 0;
+        virtual void copyParametersToContext(OpenMM::ContextImpl& context, const AmoebaGKCavitationForce& force) = 0;
     };
 
 } // namespace OpenMM

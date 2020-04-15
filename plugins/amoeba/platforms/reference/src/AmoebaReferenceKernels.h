@@ -843,20 +843,20 @@ private:
 };
 
 /**
- * This kernel is invoked by GKNPForce to calculate the forces acting
+ * This kernel is invoked by GKCavitationForce to calculate the forces acting
  * on the system and the energy of the system.
  */
-class ReferenceCalcGKNPForceKernel : public CalcGKNPForceKernel {
+class ReferenceCalcGKCavitationForceKernel : public CalcGKCavitationForceKernel {
 public:
-    ReferenceCalcGKNPForceKernel(const std::string& name, const Platform& platform, const System& system);
-    ~ReferenceCalcGKNPForceKernel();
+    ReferenceCalcGKCavitationForceKernel(const std::string& name, const Platform& platform, const System& system);
+    ~ReferenceCalcGKCavitationForceKernel();
     /**
         * Initialize the kernel.
         *
         * @param system     the System this kernel will be applied to
-        * @param force      the GKNPForce this kernel will be used for
+        * @param force      the GKCavitationForce this kernel will be used for
         */
-    void initialize(const OpenMM::System& system, const AmoebaGKNPForce& force);
+    void initialize(const OpenMM::System& system, const AmoebaGKCavitationForce& force);
     /**
         * Execute the kernel to calculate the forces and/or energy.
         *
@@ -868,9 +868,9 @@ public:
         * Copy changed parameters over to a context.
         *
         * @param context    the context to copy parameters to
-        * @param force      the GKNPForce to copy the parameters from
+        * @param force      the GKCavitationForce to copy the parameters from
         */
-    void copyParametersToContext(OpenMM::ContextImpl& context, const AmoebaGKNPForce& force);
+    void copyParametersToContext(OpenMM::ContextImpl& context, const AmoebaGKCavitationForce& force);
 private:
     GaussVol *gvol; // gaussvol instance
     //inputs
@@ -890,7 +890,6 @@ private:
     std::vector<RealVec> vol_force;
     std::vector<RealOpenMM> vol_dv;
     std::vector<RealOpenMM> volume_scaling_factor;
-    double solvent_radius;
     double roffset;
     double executeGVolSA(OpenMM::ContextImpl& context, bool includeForces, bool includeEnergy);
 };

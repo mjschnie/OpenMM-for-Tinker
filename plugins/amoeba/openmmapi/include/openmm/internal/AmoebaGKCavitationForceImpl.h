@@ -1,11 +1,11 @@
-#ifndef OPENMM_GKNPFORCEIMPL_H_
-#define OPENMM_GKNPFORCEIMPL_H_
+#ifndef OPENMM_GKCAVITATIONFORCEIMPL_H_
+#define OPENMM_GKCAVITATIONFORCEIMPL_H_
 
 /* -------------------------------------------------------------------------- *
- *                                   OpenMM-GKNP                              *
+ *                             OpenMM-GKCavitation                            *
  * -------------------------------------------------------------------------- */
 
-#include "openmm/AmoebaGKNPForce.h"
+#include "openmm/AmoebaGKCavitationForce.h"
 #include "openmm/internal/ForceImpl.h"
 #include "openmm/Kernel.h"
 #include <utility>
@@ -17,15 +17,15 @@ namespace OpenMM {
 class System;
 
 /**
- * This is the internal implementation of GKNPForce.
+ * This is the internal implementation of GKCavitationForce.
  */
 
-class AmoebaGKNPForceImpl : public ForceImpl {
+class AmoebaGKCavitationForceImpl : public ForceImpl {
 public:
-    AmoebaGKNPForceImpl(const AmoebaGKNPForce& owner);
-    ~AmoebaGKNPForceImpl();
+    AmoebaGKCavitationForceImpl(const AmoebaGKCavitationForce& owner);
+    ~AmoebaGKCavitationForceImpl();
     void initialize(ContextImpl& context);
-    const AmoebaGKNPForce& getOwner() const {
+    const AmoebaGKCavitationForce& getOwner() const {
         return owner;
     }
     void updateContextState(ContextImpl& context) {
@@ -38,10 +38,10 @@ public:
     std::vector<std::string> getKernelNames();
     void updateParametersInContext(ContextImpl& context);
 private:
-    const AmoebaGKNPForce& owner;
+    const AmoebaGKCavitationForce& owner;
     OpenMM::Kernel kernel;
 };
 
 } // namespace OpenMM
 
-#endif /*OPENMM_GKNPFORCEIMPL_H_*/
+#endif /*OPENMM_GKCAVITATIONFORCEIMPL_H_*/

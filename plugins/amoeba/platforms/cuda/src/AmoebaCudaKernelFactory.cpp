@@ -62,7 +62,7 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
         platform.registerKernelFactory(CalcAmoebaStretchTorsionForceKernel::Name(), factory);
         platform.registerKernelFactory(CalcAmoebaAngleTorsionForceKernel::Name(), factory);
         platform.registerKernelFactory(CalcHippoNonbondedForceKernel::Name(), factory);
-        platform.registerKernelFactory(CalcGKNPForceKernel::Name(), factory);
+        platform.registerKernelFactory(CalcGKCavitationForceKernel::Name(), factory);
     }
     catch (...) {
         // Ignore.  The CUDA platform isn't available.
@@ -125,8 +125,8 @@ KernelImpl* AmoebaCudaKernelFactory::createKernelImpl(std::string name, const Pl
     if (name == CalcHippoNonbondedForceKernel::Name())
         return new CudaCalcHippoNonbondedForceKernel(name, platform, cu, context.getSystem());
 
-    if (name == CalcGKNPForceKernel::Name())
-        return new CudaCalcGKNPForceKernel(name, platform, cu, context.getSystem());
+    if (name == CalcGKCavitationForceKernel::Name())
+        return new CudaCalcGKCavitationForceKernel(name, platform, cu, context.getSystem());
 
     throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
 }

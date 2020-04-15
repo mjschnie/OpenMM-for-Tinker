@@ -803,22 +803,22 @@ private:
 };
 
 /**
- * This kernel is invoked by GKNPForce to calculate the forces acting on the system and the energy of the system.
+ * This kernel is invoked by GKCavitationForce to calculate the forces acting on the system and the energy of the system.
  */
-    class CudaCalcGKNPForceKernel : public CalcGKNPForceKernel {
+    class CudaCalcGKCavitationForceKernel : public CalcGKCavitationForceKernel {
     public:
-        CudaCalcGKNPForceKernel(std::string name, const OpenMM::Platform &platform, OpenMM::CudaContext &cu,
-                                const OpenMM::System &system);
+        CudaCalcGKCavitationForceKernel(std::string name, const OpenMM::Platform &platform, OpenMM::CudaContext &cu,
+                                        const OpenMM::System &system);
 
-        ~CudaCalcGKNPForceKernel();
+        ~CudaCalcGKCavitationForceKernel();
 
         /**
          * Initialize the kernel.
          *
          * @param system     the System this kernel will be applied to
-         * @param force      the GKNPForce this kernel will be used for
+         * @param force      the GKCavitationForce this kernel will be used for
          */
-        void initialize(const OpenMM::System &system, const AmoebaGKNPForce &force);
+        void initialize(const OpenMM::System &system, const AmoebaGKCavitationForce &force);
 
         /**
          * Execute the kernel to calculate the forces and/or energy.
@@ -834,9 +834,9 @@ private:
          * Copy changed parameters over to a context.
          *
          * @param context    the context to copy parameters to
-         * @param force      the GKNPForce to copy the parameters from
+         * @param force      the GKCavitationForce to copy the parameters from
          */
-        void copyParametersToContext(OpenMM::ContextImpl &context, const AmoebaGKNPForce &force);
+        void copyParametersToContext(OpenMM::ContextImpl &context, const AmoebaGKCavitationForce &force);
 
         class CudaOverlapTree {
         public:
@@ -869,7 +869,6 @@ private:
                 ovProcessedFlag = NULL;
                 ovOKtoProcessFlag = NULL;
                 ovChildrenReported = NULL;
-
                 ovAtomBuffer = NULL;
                 selfVolumeBuffer_long = NULL;
                 selfVolumeBuffer = NULL;
@@ -878,18 +877,14 @@ private:
                 AccumulationBuffer2_long = NULL;
                 AccumulationBuffer2_real = NULL;
                 gradBuffers_long = NULL;
-
                 temp_buffer_size = -1;
                 gvol_buffer_temp = NULL;
                 tree_pos_buffer_temp = NULL;
                 i_buffer_temp = NULL;
                 atomj_buffer_temp = NULL;
-
                 has_saved_noverlaps = false;
                 tree_size_boost = 2;//6;//debug 2 is default
-
                 hasExceededTempBuffer = false;
-
             };
 
             ~CudaOverlapTree(void) {
@@ -921,7 +916,6 @@ private:
                 delete ovProcessedFlag;
                 delete ovOKtoProcessFlag;
                 delete ovChildrenReported;
-
                 delete ovAtomBuffer;
                 delete selfVolumeBuffer_long;
                 delete selfVolumeBuffer;
@@ -930,7 +924,6 @@ private:
                 delete AccumulationBuffer2_long;
                 delete AccumulationBuffer2_real;
                 delete gradBuffers_long;
-
                 delete gvol_buffer_temp;
                 delete tree_pos_buffer_temp;
                 delete i_buffer_temp;
@@ -941,15 +934,11 @@ private:
             void init_tree_size(int num_atoms, int padded_num_atoms, int num_compute_units, int pad_modulo,
                                 std::vector<int> &noverlaps_current);
 
-            //simpler version with precomputed tree sizes
-            void init_tree_size(int padded_num_atoms, int tree_section_size, int num_compute_units, int pad_modulo);
-
             //resizes tree buffers
             void resize_tree_buffers(OpenMM::CudaContext &cu, int ov_work_group_size);
 
             //copies the tree framework to Cuda device memory
             int copy_tree_to_device(void);
-
 
             // host variables and buffers
             int num_atoms;
@@ -1020,7 +1009,7 @@ private:
 
 
     private:
-        const AmoebaGKNPForce *gvol_force;
+        const AmoebaGKCavitationForce *gvol_force;
 
         int numParticles;
         unsigned int version;
@@ -1039,9 +1028,6 @@ private:
         int num_compute_units;
 
         CudaOverlapTree *gtree;   //tree of atomic overlaps
-
-        double solvent_radius; //solvent probe radius for GKNP2
-
         OpenMM::CudaArray *radiusParam1;
         OpenMM::CudaArray *radiusParam2;
         OpenMM::CudaArray *gammaParam1;
@@ -1058,12 +1044,6 @@ private:
         std::vector<float> chargeVector;  //charge
         std::vector<float> alphaVector;   //alpha vdw parameter
         std::vector<int> ishydrogenVector;
-
-        OpenMM::CudaArray *testBuffer;
-
-        OpenMM::CudaArray *radtypeScreened;
-        OpenMM::CudaArray *radtypeScreener;
-
         OpenMM::CudaArray *selfVolume; //vdw radii
         OpenMM::CudaArray *selfVolumeLargeR; //large radii
         OpenMM::CudaArray *Semaphor;
@@ -1084,21 +1064,15 @@ private:
         CUfunction resetSelfVolumesKernel;
         CUfunction InitOverlapTreeKernel_1body_1;
         CUfunction InitOverlapTreeKernel_1body_2;
-
         CUfunction InitOverlapTreeCountKernel;
-
         CUfunction reduceovCountBufferKernel;
-
         CUfunction InitOverlapTreeKernel;
-        int InitOverlapTreeKernel_first_nbarg;
-
         CUfunction ComputeOverlapTreeKernel;
         CUfunction ComputeOverlapTree_1passKernel;
         CUfunction computeSelfVolumesKernel;
         CUfunction reduceSelfVolumesKernel_tree;
         CUfunction reduceSelfVolumesKernel_buffer;
         CUfunction updateSelfVolumesForcesKernel;
-
         CUfunction resetTreeKernel;
         CUfunction SortOverlapTree2bodyKernel;
         CUfunction resetComputeOverlapTreeKernel;
@@ -1107,7 +1081,6 @@ private:
         CUfunction RescanOverlapTreeKernel;
         CUfunction RescanOverlapTreeGammasKernel_W;
         CUfunction InitOverlapTreeGammasKernel_1body_W;
-        //CUfunction computeVolumeEnergyKernel;
 
         /* Gaussian atomic parameters */
         std::vector<float> gaussian_exponent;
@@ -1123,7 +1096,6 @@ private:
         std::vector<int> atom_ishydrogen;
 
         int niterations;
-        int verbose_level;
 
         void executeInitKernels(OpenMM::ContextImpl &context, bool includeForces, bool includeEnergy);
 
