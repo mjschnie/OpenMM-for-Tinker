@@ -19,7 +19,7 @@
 using namespace OpenMM;
 using namespace std;
 
-extern "C" OPENMM_EXPORT void registerGKNPReferenceKernelFactories();
+extern "C" OPENMM_EXPORT void registerAmoebaReferenceKernelFactories();
 
 static struct MyAtomInfo {
     const char* pdb;
@@ -109,7 +109,7 @@ void testEnergy() {
 
 int main(){
     try {
-        registerGKNPReferenceKernelFactories();
+        registerAmoebaReferenceKernelFactories();
         testEnergy();
     }
     catch(const std::exception& e) {
