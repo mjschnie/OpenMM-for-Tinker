@@ -31,7 +31,8 @@ FOREACH(subdir ${OPENMM_SOURCE_SUBDIRS})
     # append
     SET(API_INCLUDE_DIRS ${API_INCLUDE_DIRS}
                          ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/include
-                         ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/include/internal)
+                         ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/include/internal
+            )
 ENDFOREACH(subdir)
 
 # We'll need both *relative* path names, starting with their API_INCLUDE_DIRS,

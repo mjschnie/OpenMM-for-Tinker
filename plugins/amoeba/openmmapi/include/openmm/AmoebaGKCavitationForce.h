@@ -1,8 +1,8 @@
-#ifndef OPENMM_GKNPFORCE_H_
-#define OPENMM_GKNPFORCE_H_
+#ifndef OPENMM_GKCAVITATIONFORCE_H_
+#define OPENMM_GKCAVITATIONFORCE_H_
 
 /* -------------------------------------------------------------------------- *
- *                         OpenMM-GKNP                                        *
+ *                         OpenMM-GKCavitation                                        *
  * -------------------------------------------------------------------------- */
 
 #include "openmm/Context.h"
@@ -15,29 +15,15 @@
 #define ANG2 (.01f)
 #define ANG3 (0.001f)
 
-//volume cutoffs for MS spheres
-//those for atomic overlaps are defined in gaussvol.h
-//#define VOLMINMSA (0.25f*ANG3)
-//#define VOLMINMSB (0.5f*ANG3)
-#define VOLMINMSA (0.25f*ANG3)
-#define VOLMINMSB (1.00f*ANG3)
-
 //radius offset for surf energy calc.
-#define GKNP_RADIUS_INCREMENT (0.0005f)
+#define GKCAV_RADIUS_INCREMENT (0.0005f)
 
-#define GKNP2_RADIUS_INCREMENT (0.1f*ANG)
-
-//radius of a water molecule for GKNP2
-#define SOLVENT_RADIUS (1.0*ANG)
-
-//solvent radius for vdw energy
-#define GKNP_HB_RADIUS (1.4*ANG)
 
 namespace OpenMM {
 
-/* This class implements the GKNP implicit solvation model */
+/* This class implements the GKCavitation implicit solvation model */
 
-class OPENMM_EXPORT_AMOEBA AmoebaGKNPForce : public OpenMM::Force {
+class OPENMM_EXPORT_AMOEBA AmoebaGKCavitationForce : public OpenMM::Force {
 public:
     /**
      * This is an enumeration of the different methods that may be used for handling long range nonbonded forces.
@@ -59,11 +45,11 @@ public:
         CutoffPeriodic = 2,
     };
     /**
-     * Create an GKNPForce.
+     * Create an GKCavitationForce.
      */
-    AmoebaGKNPForce();
+    AmoebaGKCavitationForce();
     /**
-     * Add a particle to GKNP
+     * Add a particle to GKCavitation
      *
      * This should be called once for each particle in the System. When it is called for the i'th time, 
      * it specifies the parameters for the i'th particle.
@@ -78,7 +64,7 @@ public:
     int addParticle(double radius, double gamma, double vdw_alpha, double charge, bool ishydrogen);
 
     /**
-     * Modify the parameters of a particle to GKNP
+     * Modify the parameters of a particle to GKCavitation
      *
      * @param index       the index of the particle
      * @param radius      the van der Waals radius of the particle, measured in nm
@@ -91,7 +77,7 @@ public:
     void setParticleParameters(int index, double radius, double gamma, double vdw_alpha, double charge, bool ishydrogen);
     
     /**
-     * Get the GKNP parameters for a particle
+     * Get the GKCavitation parameters for a particle
      * 
      * @param index       the index of the particle
      * @param radius      the van der Waals radius of the particle, measured in nm
@@ -103,7 +89,7 @@ public:
     void getParticleParameters(int index, double& radius, double& gamma,  double& vdw_alpha, double &charge,
 			       bool& ishydrogen) const;
     /**
-     * Get the number of particles defined for GKNP
+     * Get the number of particles defined for GKCavitation
      */
     int getNumParticles() const {
         return particles.size();
@@ -130,10 +116,6 @@ public:
      * @param distance    the cutoff distance, measured in nm
      */
     void setCutoffDistance(double distance);
-
-    double getSolventRadius() const {
-      return solvent_radius;
-    }
     
     void updateParametersInContext(OpenMM::Context& context);
 
@@ -145,14 +127,13 @@ private:
     std::vector<ParticleInfo> particles;
     NonbondedMethod nonbondedMethod;
     double cutoffDistance;
-    double solvent_radius;
 };
 
 /**
  * This is an internal class used to record information about particles.
  * @private
  */
-class AmoebaGKNPForce::ParticleInfo {
+class AmoebaGKCavitationForce::ParticleInfo {
  public:
   bool ishydrogen;
   double radius, gamma, vdw_alpha, charge;
@@ -167,6 +148,6 @@ class AmoebaGKNPForce::ParticleInfo {
   radius(radius), gamma(gamma), vdw_alpha(vdw_alpha), charge(charge), ishydrogen(ishydrogen) {  }
  };
  
-} // namespace GKNPPlugin
+} // namespace OpenMM
 
-#endif /*OPENMM_GKNPFORCE_H_*/
+#endif /*OPENMM_GKCAVITATIONFORCE_H_*/
