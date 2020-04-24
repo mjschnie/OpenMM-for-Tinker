@@ -2836,6 +2836,7 @@ void CudaCalcAmoebaWcaDispersionForceKernel::initialize(const System& system, co
     defines["EPSH"] = cu.doubleToString(force.getEpsh());
     defines["RMINO"] = cu.doubleToString(force.getRmino());
     defines["RMINH"] = cu.doubleToString(force.getRminh());
+    defines["DISPOFF"] = cu.doubleToString(force.getDispoff());
     defines["AWATER"] = cu.doubleToString(force.getAwater());
     defines["SHCTD"] = cu.doubleToString(force.getShctd());
     defines["M_PI"] = cu.doubleToString(M_PI);
