@@ -872,7 +872,6 @@ public:
         */
     void copyParametersToContext(OpenMM::ContextImpl& context, const AmoebaGKCavitationForce& force);
 private:
-    GaussVol *gvol; // gaussvol instance
     //inputs
     int numParticles;
     std::vector<RealVec> positions;
@@ -891,7 +890,6 @@ private:
     std::vector<RealOpenMM> vol_dv;
     std::vector<RealOpenMM> volume_scaling_factor;
     double roffset;
-    double executeGVolSA(OpenMM::ContextImpl& context, bool includeForces, bool includeEnergy);
 };
 
 } // namespace OpenMM
