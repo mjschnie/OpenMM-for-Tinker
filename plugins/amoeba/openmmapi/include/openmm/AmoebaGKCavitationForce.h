@@ -117,7 +117,7 @@ public:
      */
     void setCutoffDistance(double distance);
     
-    void updateParametersInContext(OpenMM::Context& context);
+    void updateParametersInContext(Context &context);
 
 
 protected:
