@@ -25,28 +25,24 @@ using namespace std;
 extern "C" OPENMM_EXPORT void registerAmoebaCudaKernelFactories();
 
 static struct MyAtomInfo {
-    const char* pdb;
-    double      mass,vdwRadiusInAng, vdwVolume, gamma;
-    bool        isHydrogen;
-    double      charge;
-    double      initPosInAng[3];
+    const char *pdb;
+    double mass, vdwRadiusInAng, gamma;
+    bool isHydrogen;
+    double initPosInAng[3];
 } atoms[] = {
-
-        // pdb   mass vdwRad vdwVol gamma isHydrogen charge,  initPos
-        {" C ", 12.00, 1.91, 28.28,  0.16,  false, -0.18,  0.76506600,    0.00000200,   -0.00000100},
-        {" C ", 12.00, 1.91, 28.28,  0.16,  false, -0.18, -0.76506500,   -0.00000200,    0.00000100},
-        {" H ",  1.00, 1.48, 12.77,  0,     true,   0.06, -1.16573300,    0.67232500,    0.77710400},
-        {" H ",  1.00, 1.48, 12.77,  0,     true,   0.06, -1.16574800,    0.33683200,   -0.97079400},
-        {" H ",  1.00, 1.48, 12.77,  0,     true,   0.06, -1.16572400,   -1.00915800,    0.19369400},
-        {" H ",  1.00, 1.48, 12.77,  0,     true,   0.06,  1.16571800,    1.00915600,   -0.19370700},
-        {" H ",  1.00, 1.48, 12.77,  0,     true,   0.06,  1.16574000,   -0.33682500,    0.97080200},
-        {" H ",  1.00, 1.48, 12.77,  0,     true,   0.06,  1.16573600,   -0.67233000,   -0.77709700},
+        // Atom name, mass, vdwRad (A), gamma, (kcal/mol/A^2), isHydrogen, initPos
+        {" C ", 12.00, 1.91, 0.103, false, -0.76556335, 0.00001165,  -0.00000335},
+        {" C ", 12.00, 1.91, 0.103, false, 0.76556335,  -0.00001165, 0.00000335},
+        {" H ", 1.00,  1.48, 0,     true,  -1.16801233, 0.65545698,  0.78074120},
+        {" H ", 1.00,  1.48, 0,     true,  -1.16800941, 0.34844426,  -0.95800528},
+        {" H ", 1.00,  1.48, 0,     true,  -1.16803492, -1.00384801, 0.17724878},
+        {" H ", 1.00,  1.48, 0,     true,  1.16800941,  -0.34844426, 0.95800528},
+        {" H ", 1.00,  1.48, 0,     true,  1.16803492,  1.00384801,  -0.17724878},
+        {" H ", 1.00,  1.48, 0,     true,  1.16801233,  -0.65545698, -0.78074120},
         {""} // end of list
 };
 
 void testForce() {
-
-    bool veryverbose = false;
 
     System system;
     NonbondedForce *nb = new NonbondedForce();
@@ -59,35 +55,20 @@ void testForce() {
     int numParticles = 8;
     vector<Vec3> positions;
 
-    //Constants for unit/energy conversions
-    double solventPressure = 0.11337;
-    double volumeOffsetVdwToSEV = 27.939;
-    double surfaceAreaOffsetVdwToSASA = 46.111;
-    double surfaceTension = 0.16;
-    //double rminToSigma = 1.0 / pow(2.0, 1.0 / 6.0);
+    // Constants for unit/energy conversions
+    double surfaceTension = 0.103;
     double ang2nm = 0.1;
     double kcalmol2kjmol = 4.184;
-    double sigmaw = 3.15365*ang2nm; /* LJ sigma of TIP4P water oxygen */
-    double epsilonw = 0.155*kcalmol2kjmol;        /* LJ epsilon of TIP4P water oxygen */
-    double rho = 0.033428/pow(ang2nm,3);   /* water number density */
-    double epsilon_LJ = 0.155*kcalmol2kjmol;
-    double sigma_LJ;
-
-    for(int i=0;i<numParticles;i++){
-
+    for (int i = 0; i < numParticles; i++) {
         system.addParticle(atoms[i].mass);
-        positions.push_back(Vec3(atoms[i].initPosInAng[0], atoms[i].initPosInAng[1], atoms[i].initPosInAng[2])*ang2nm);
+        positions.push_back(
+                Vec3(atoms[i].initPosInAng[0], atoms[i].initPosInAng[1], atoms[i].initPosInAng[2]) * ang2nm);
         atoms[i].vdwRadiusInAng *= ang2nm;
-        sigma_LJ = 2.*atoms[i].vdwRadiusInAng;
-        //atoms[i].vdwRadiusInAng *= rminToSigma;
-        atoms[i].gamma *= kcalmol2kjmol/(ang2nm*ang2nm);
-        double sij = sqrt(sigmaw*sigma_LJ);
-        double eij = sqrt(epsilonw*epsilon_LJ);
-        double alpha = - 16.0 * M_PI * rho * eij * pow(sij,6) / 3.0;
-        nb->addParticle(0.0,0.0,0.0);
-        force->addParticle(atoms[i].vdwRadiusInAng, atoms[i].gamma, alpha, atoms[i].charge, atoms[i].isHydrogen);
-        cout << "Atom: " << i << " Radius: " << atoms[i].vdwRadiusInAng << " gamma: " << atoms[i].gamma << " alpha: " << alpha << " Charge: " << atoms[i].charge << " Hydrogen?: " << atoms[i].isHydrogen << endl;
-        force->getParticleParameters(i, atoms[i].vdwRadiusInAng, atoms[i].gamma, alpha, atoms[i].charge, atoms[i].isHydrogen);
+        atoms[i].gamma *= kcalmol2kjmol / (ang2nm * ang2nm);
+        nb->addParticle(0.0, 0.0, 0.0);
+        force->addParticle(atoms[i].vdwRadiusInAng, atoms[i].gamma, 0.0, 0.0, atoms[i].isHydrogen);
+        double dummy;
+        force->getParticleParameters(i, atoms[i].vdwRadiusInAng, atoms[i].gamma, dummy, dummy, atoms[i].isHydrogen);
     }
 
     VerletIntegrator integ(1.0);
@@ -97,25 +78,30 @@ void testForce() {
     context.setPositions(positions);
     State state = context.getState(State::Energy | State::Forces | State::Positions);
 
-    double energy1 = 0;
-    energy1 = state.getPotentialEnergy();
-    double surfaceArea = (energy1/kcalmol2kjmol)/surfaceTension + surfaceAreaOffsetVdwToSASA;
-    double surfaceAreaEnergy=surfaceArea*surfaceTension;
+    double energy1 = state.getPotentialEnergy();
+    double surfaceArea = (energy1 / kcalmol2kjmol) / surfaceTension;
+    double surfaceAreaEnergy = surfaceArea * surfaceTension;
+
+    // TODO: Replace these with assert statements.
+    //  Force Field X Values:
+    //  Surface Area:          62.426 (Ang^2)
+    //  Surface Area Energy:    6.430 (kcal/mol)
+
     cout << endl;
     cout << std::setw(25) << std::left << "Surface Area: " << std::fixed << surfaceArea << " (Ang^2)" << endl;
-    cout << std::setw(25) << std::left << "Surface Area Energy: " << surfaceAreaEnergy << " (kcal/mol)" << endl << endl;
+    cout << std::setw(25) << std::left << "Surface Area Energy:  " << surfaceAreaEnergy << " (kcal/mol)" << endl << endl;
 
-    cout << "Forces: " << endl;
-    for(int i = 0; i < numParticles; i++) {
-        cout << "FW: " << i << " " << state.getForces()[i][0] << " " << state.getForces()[i][1] << " "
-             << state.getForces()[i][2] << " " << endl;
-    }
+//    cout << "Forces: " << endl;
+//    for(int i = 0; i < numParticles; i++) {
+//        cout << "FW: " << i << " " << state.getForces()[i][0] << " " << state.getForces()[i][1] << " "
+//             << state.getForces()[i][2] << " " << endl;
+//    }
 
-    // validate force by moving an atom
+    // Validate force by moving an atom
 #ifdef NOTNOW
-    double offset = 2.e-3;
-    int pmove = 121;
-    int direction = 1;
+    double offset = 1.0e-3;
+    int pmove = 0;
+    int direction = 0;
     positions[pmove][direction] += offset;
     context.setPositions(positions);
     double energy2 = context.getState(State::Energy).getPotentialEnergy();

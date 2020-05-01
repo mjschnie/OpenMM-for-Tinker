@@ -14,3 +14,6 @@
 */*/*/*/*/*/*.h-orig
 */*/*/*/*/*/*.cpp-new
 */*/*/*/*/*/*.cpp-orig
+
+.idea/
+cmake-build-debug/
