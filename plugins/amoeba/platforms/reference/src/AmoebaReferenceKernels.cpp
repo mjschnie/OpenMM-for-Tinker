@@ -37,6 +37,7 @@
 #include "AmoebaReferenceVdwForce.h"
 #include "AmoebaReferenceWcaDispersionForce.h"
 #include "AmoebaReferenceGeneralizedKirkwoodForce.h"
+#include "AmoebaReferenceGKCavitationForce.h"
 #include "openmm/internal/AmoebaTorsionTorsionForceImpl.h"
 #include "openmm/internal/AmoebaWcaDispersionForceImpl.h"
 #include "ReferencePlatform.h"
@@ -1443,12 +1444,9 @@ void ReferenceCalcHippoNonbondedForceKernel::getDPMEParameters(double& alpha, in
 }
 
 // Initializes GKCavitation library
-ReferenceCalcGKCavitationForceKernel::ReferenceCalcGKCavitationForceKernel(const std::string& name, const Platform& platform, const System& system) : CalcGKCavitationForceKernel(name, platform) {
-    gvol = 0;
-}
+ReferenceCalcGKCavitationForceKernel::ReferenceCalcGKCavitationForceKernel(const std::string& name, const Platform& platform, const System& system) : CalcGKCavitationForceKernel(name, platform) {}
 
 ReferenceCalcGKCavitationForceKernel::~ReferenceCalcGKCavitationForceKernel(){
-    if(gvol) delete gvol;
     positions.clear();
     ishydrogen.clear();
     radii_vdw.clear();
@@ -1511,81 +1509,20 @@ void ReferenceCalcGKCavitationForceKernel::initialize(const System& system, cons
 
     }
 
-    //create and saves GaussVol instance
-    //radii, volumes, etc. will be set in execute()
-    gvol = new GaussVol(numParticles, ishydrogen);
-
     //volume scaling factors and born radii
     volume_scaling_factor.resize(numParticles);
 }
 
 double ReferenceCalcGKCavitationForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
     double energy = 0.0;
-    energy = executeGVolSA(context, includeForces, includeEnergy);
-    return energy;
-}
-
-
-double ReferenceCalcGKCavitationForceKernel::executeGVolSA(ContextImpl& context, bool includeForces, bool includeEnergy) {
-    //sequence: volume1->volume2
-    //weights
-    RealOpenMM w_evol = 1.0;
     vector<RealVec>& pos = extractPositions(context);
     vector<RealVec>& force = extractForces(context);
-    RealOpenMM energy = 0.0;
-    vector<RealOpenMM> nu(numParticles);
-
-    // volume energy function 1 (large radii)
-    RealOpenMM volume1, vol_energy1;
-    gvol->setRadii(radii_large);
-
-    vector<RealOpenMM> volumes_large(numParticles);
-    for(int i = 0; i < numParticles; i++){
-        volumes_large[i] = ishydrogen[i]>0 ? 0.0 : 4.*M_PI*pow(radii_large[i],3)/3.;
-    }
-    gvol->setVolumes(volumes_large);
-
-    for(int i = 0; i < numParticles; i++){
-        nu[i] = gammas[i]/roffset;
-    }
-    gvol->setGammas(nu);
-    gvol->compute_tree(pos);
-    gvol->compute_volume(pos, volume1, vol_energy1, vol_force, vol_dv, free_volume, self_volume);
-
-    //returns energy and gradients from volume energy function
-    for(int i = 0; i < numParticles; i++){
-        force[i] += vol_force[i] * w_evol;
-    }
-    energy += vol_energy1 * w_evol;
-
-    // volume energy function 2 (small radii)
-    RealOpenMM vol_energy2, volume2;
-    gvol->setRadii(radii_vdw);
-
-    vector<RealOpenMM> volumes_vdw(numParticles);
-    for(int i = 0; i < numParticles; i++){
-        volumes_vdw[i] = ishydrogen[i]>0 ? 0.0 : 4.*M_PI*pow(radii_vdw[i],3)/3.;
-    }
-
-    gvol->setVolumes(volumes_vdw);
-
-    for(int i = 0; i < numParticles; i++){
-        nu[i] = -gammas[i]/roffset;
-    }
-
-    gvol->setGammas(nu);
-    gvol->rescan_tree_volumes(pos);
-    gvol->compute_volume(pos, volume2, vol_energy2, vol_force, vol_dv, free_volume, self_volume);
-
-    for(int i = 0; i < numParticles; i++){
-        force[i] += vol_force[i] * w_evol;
-    }
-    energy += vol_energy2 * w_evol;
-
-    //returns energy
-    return (double)energy;
+    AmoebaReferenceGKCavitationForce amoebaReferenceGkCavitationForce;
+    energy = amoebaReferenceGkCavitationForce.calculateForceAndEnergy(pos, force, numParticles,
+            ishydrogen, radii_large, radii_vdw, gammas,
+            roffset, vol_force, vol_dv, free_volume, self_volume);
+    return energy;
 }
-
 
 void ReferenceCalcGKCavitationForceKernel::copyParametersToContext(ContextImpl& context, const AmoebaGKCavitationForce& force) {
     if (force.getNumParticles() != numParticles)

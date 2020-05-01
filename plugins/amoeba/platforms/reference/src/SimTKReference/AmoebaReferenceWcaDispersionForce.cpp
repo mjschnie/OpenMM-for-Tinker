@@ -121,7 +121,7 @@ static double interact(double factor, double ri, double sk, double rmix, double 
         double de = 0.0;
         double sk2 = sk * sk;
         // Compute the maximum of 1) the beginning of the integral and 2) closest edge of atom K.
-        double iStart = std::max(ri, r - sk);
+        double iStart = ri > r - sk ? ri : r - sk;
         // Use this as the lower limit for integrating the constant eps value below Rmin.
         double lik = iStart;
         // Interaction with water from lik to Rmin; nothing to do if the lower limit is greater than Rmin.
@@ -130,7 +130,7 @@ static double interact(double factor, double ri, double sk, double rmix, double 
             double lik3 = lik2 * lik;
             double lik4 = lik3 * lik;
             // Upper limit is the minimum of Rmin and the farthest edge of atom K.
-            double uik = std::min(r + sk, rmix);
+            double uik = r + sk < rmix ? r + sk : rmix;
             double uik2 = uik * uik;
             double uik3 = uik2 * uik;
             double uik4 = uik3 * uik;
@@ -142,7 +142,7 @@ static double interact(double factor, double ri, double sk, double rmix, double 
         // Interaction with water beyond Rmin, from lik to uik = r + sk.
         if (uik > rmix) {
             // Start the integral at the max of 1) iStart and 2) Rmin.
-            lik = std::max(iStart, rmix);
+            lik = iStart > rmix ? iStart : rmix;
             double lik2 = lik * lik;
             double lik3 = lik2 * lik;
             double lik4 = lik3 * lik;
