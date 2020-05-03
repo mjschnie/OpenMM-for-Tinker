@@ -20,6 +20,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <vector>
 #include "AmoebaReferenceGKCavitationForce.h"
 
 using namespace OpenMM;
@@ -39,8 +40,8 @@ double AmoebaReferenceGKCavitationForce::calculateForceAndEnergy(vector<RealVec>
 
     //sequence: volume1->volume2
     //weights
-    RealOpenMM w_evol = 1.0f;
-    RealOpenMM energy = 0.0;
+    double w_evol = 1.0;
+    double energy;
     vector<RealOpenMM> nu(numParticles);
 
     // volume energy function 1 (large radii)
@@ -64,10 +65,11 @@ double AmoebaReferenceGKCavitationForce::calculateForceAndEnergy(vector<RealVec>
     for (int i = 0; i < numParticles; i++) {
         force[i] += vol_force[i] * w_evol;
     }
+
     energy = vol_energy1 * w_evol;
 
     // volume energy function 2 (small radii)
-    RealOpenMM vol_energy2, volume2;
+    double vol_energy2, volume2;
     gvol->setRadii(radii_vdw);
 
     vector<RealOpenMM> volumes_vdw(numParticles);
@@ -88,9 +90,9 @@ double AmoebaReferenceGKCavitationForce::calculateForceAndEnergy(vector<RealVec>
     for (int i = 0; i < numParticles; i++) {
         force[i] += vol_force[i] * w_evol;
     }
+
     energy += vol_energy2 * w_evol;
 
-    //returns energy
-    return (double) energy;
+    return energy;
 }
 

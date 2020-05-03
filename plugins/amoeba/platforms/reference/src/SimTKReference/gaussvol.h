@@ -27,20 +27,12 @@
 #ifndef GAUSSVOL_H
 #define GAUSSVOL_H
 
-#include <cmath>
 #include <cfloat>
-#include <vector>
-using std::vector;
 #include "openmm/OpenMMException.h"
-#include "openmm/internal/ContextImpl.h"
-#include "SimTKOpenMMRealType.h"
 #include "RealVec.h"
-#include "ReferencePlatform.h"
 
+using std::vector;
 using namespace OpenMM;
-
-#define GAUSSVOL_OK (2)
-#define GAUSSVOL_ERR (-1)
 
 /* conversion factors from spheres to Gaussians */
 #define KFC (2.2269859253f)
@@ -54,12 +46,10 @@ using namespace OpenMM;
 // maximum overlap level
 #define MAX_ORDER (16)
 
-//use nm and kj
-#define ANG (0.1f)
+// use nm and kj
 #define ANG3 (0.001f)
 
 //volume cutoffs in switching function
-#define VOLMIN0 (0.009f*ANG3)
 #define VOLMINA (0.01f*ANG3)
 #define VOLMINB (0.1f*ANG3)
 

@@ -1,10 +1,7 @@
-#include <cmath>
-#include <cfloat>
+
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include <algorithm>
-#include "SimTKOpenMMRealType.h"
 #include "RealVec.h"
 #include "gaussvol.h"
 
@@ -12,7 +9,6 @@ using namespace std;
 
 //counts overlaps
 static int _nov_ = 0; 
-
 
 /* overlap volume switching function + 1st derivative */
 RealOpenMM pol_switchfunc(RealOpenMM gvol, RealOpenMM volmina, RealOpenMM volminb, RealOpenMM &sp){
