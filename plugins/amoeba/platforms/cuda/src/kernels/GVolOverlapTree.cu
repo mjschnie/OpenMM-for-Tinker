@@ -1,6 +1,5 @@
 #define PI (3.14159265359f)
 #define Min_GVol (MIN_GVOL)
-#define VolMin0 (VOLMIN0)
 #define VolMinA (VOLMINA)
 #define VolMinB (VOLMINB)
 
