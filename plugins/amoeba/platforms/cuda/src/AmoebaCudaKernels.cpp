@@ -4629,7 +4629,6 @@ void CudaCalcGKCavitationForceKernel::executeInitKernels(ContextImpl &context, b
         map<string, string> replacements;
 
         replacements["KFC"] = cu.doubleToString((double) KFC);
-        replacements["VOLMIN0"] = cu.doubleToString((double) VOLMIN0);
         replacements["VOLMINA"] = cu.doubleToString((double) VOLMINA);
         replacements["VOLMINB"] = cu.doubleToString((double) VOLMINB);
         replacements["MIN_GVOL"] = cu.doubleToString((double) MIN_GVOL);
@@ -4691,7 +4690,7 @@ void CudaCalcGKCavitationForceKernel::executeInitKernels(ContextImpl &context, b
                 "       real ef = exp(-df*r2); \n"
                 "	real dfp = df/PI; \n"
                 "	real gvol = v1*v2*dfp*dfp*rsqrt(dfp)*ef; \n"
-                "	if(gvol > VolMin0 ){ \n"
+                "	if(gvol > VolMinA ){ \n"
                 "          ov_count += 1; \n"
                 "       } \n";
 

@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 #include "RealVec.h"
 #include "gaussvol.h"
 
