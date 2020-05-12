@@ -42,10 +42,16 @@ extern "C" __global__ void reduceSelfVolumes_buffer(int num_atoms,
   unsigned int atom = id;
   while (atom < num_atoms) {
     // copy self volumes and gradients from long energy buffer to regular one
+    if (global_atomic_gamma[atom] != 0.0) {
+        grad[atom].x = scale*gradBuffers_long[atom];
+        grad[atom].y = scale*gradBuffers_long[atom+padded_num_atoms];
+        grad[atom].z = scale*gradBuffers_long[atom+2*padded_num_atoms];
+    } else {
+        grad[atom].x = 0.0;
+        grad[atom].y = 0.0;
+        grad[atom].z = 0.0;
+    }
     selfVolume[atom] = scale*selfVolumeBuffer_long[atom];
-    grad[atom].x = scale*gradBuffers_long[atom];
-    grad[atom].y = scale*gradBuffers_long[atom+padded_num_atoms];
-    grad[atom].z = scale*gradBuffers_long[atom+2*padded_num_atoms];
     // divide gradient with respect to volume by volume of atom
     if(global_gaussian_volume[atom] > 0){
       grad[atom].w = scale*gradBuffers_long[atom+3*padded_num_atoms]/global_gaussian_volume[atom];
@@ -80,12 +86,9 @@ extern "C" __global__ void updateSelfVolumesForces(int update_energy,
       //alternative to the above, should give the same answer
       //energyBuffer[atom] += wen*global_atomic_gamma[atom]*selfVolume[atom];
     }
-    
-    //printf("ovVolEnergy: %d atom: %d\n", ovVolEnergy[atom], atom);
-      atomicAddLong(&forceBuffers[atom                     ], (-grad[atom].x*0x100000000));
-      atomicAddLong(&forceBuffers[atom +   padded_num_atoms], (-grad[atom].y*0x100000000));
-      atomicAddLong(&forceBuffers[atom + 2*padded_num_atoms], (-grad[atom].z*0x100000000));
-      
+    atomicAddLong(&forceBuffers[atom                     ], ((-grad[atom].x)*0x100000000));
+    atomicAddLong(&forceBuffers[atom +   padded_num_atoms], ((-grad[atom].y)*0x100000000));
+    atomicAddLong(&forceBuffers[atom + 2*padded_num_atoms], ((-grad[atom].z)*0x100000000));
     atom += blockDim.x*gridDim.x;
  }
   //TODOLater: Global memory fence needed or syncthreads sufficient?

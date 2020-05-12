@@ -471,8 +471,11 @@ __device__ void computeBornChainRuleInteraction(AtomData3 &atom1, AtomData3 &ato
     real r = SQRT(r2);
     real de = 0;
 
-    if (atom1.radius > r + sk)
-        return; // No descreening due to atom1 engulfing atom2.
+    if (atom1.radius > r + sk) {
+        // No descreening due to atom1 engulfing atom2.
+        force = delta * de;
+        return;
+    }
 
     if (atom1.radius + r < sk) {
         real uik = sk - r;

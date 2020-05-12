@@ -190,15 +190,13 @@ extern "C" __global__ void computeSelfVolumes(const int ntrees,
                 atom_add(&forceBuffers[atom+2*padded_num_atoms], (long) (dv2.z*0x100000000));
                 atom_add(&gradVBuffer_long[atom], (long) (-dv2.w*0x100000000));
                 */
-                atomicAddLong(&gradBuffers_long[atom], (dv2.x * 0x100000000));
-
-                atomicAddLong(&gradBuffers_long[atom + padded_num_atoms], (dv2.y * 0x100000000));
-
-                atomicAddLong(&gradBuffers_long[atom + 2 * padded_num_atoms], (dv2.z * 0x100000000));
-
-                atomicAddLong(&gradBuffers_long[atom + 3 * padded_num_atoms], (dv2.w * 0x100000000));
-
-                atomicAddLong( &selfVolumeBuffer_long[atom], (ovSelfVolume[slot] * 0x100000000));
+                // if (ovSelfVolume[slot] != 0) {
+                   atomicAddLong(&gradBuffers_long[atom], (dv2.x * 0x100000000));
+                   atomicAddLong(&gradBuffers_long[atom + padded_num_atoms], (dv2.y * 0x100000000));
+                   atomicAddLong(&gradBuffers_long[atom + 2 * padded_num_atoms], (dv2.z * 0x100000000));
+                   atomicAddLong(&gradBuffers_long[atom + 3 * padded_num_atoms], (dv2.w * 0x100000000));
+                   atomicAddLong( &selfVolumeBuffer_long[atom], (ovSelfVolume[slot] * 0x100000000));
+                // }
                 //printf("selfBuffer2: %d atom: %d\n", selfVolumeBuffer_long[atom], atom);
                 // nothing to do here for the volume energy,
                 // it is automatically stored in ovVolEnergy at the 1-body level

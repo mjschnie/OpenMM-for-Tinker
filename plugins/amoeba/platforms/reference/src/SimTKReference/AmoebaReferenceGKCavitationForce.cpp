@@ -63,7 +63,9 @@ double AmoebaReferenceGKCavitationForce::calculateForceAndEnergy(vector<RealVec>
 
     //returns energy and gradients from volume energy function
     for (int i = 0; i < numParticles; i++) {
-        force[i] += vol_force[i] * w_evol;
+        if (!ishydrogen[i]) {
+           force[i] += vol_force[i] * w_evol;
+        }
     }
 
     energy = vol_energy1 * w_evol;
@@ -88,7 +90,9 @@ double AmoebaReferenceGKCavitationForce::calculateForceAndEnergy(vector<RealVec>
     gvol->compute_volume(pos, volume2, vol_energy2, vol_force, vol_dv, free_volume, self_volume);
 
     for (int i = 0; i < numParticles; i++) {
-        force[i] += vol_force[i] * w_evol;
+        if (!ishydrogen[i]) {
+           force[i] += vol_force[i] * w_evol;
+        }
     }
 
     energy += vol_energy2 * w_evol;
