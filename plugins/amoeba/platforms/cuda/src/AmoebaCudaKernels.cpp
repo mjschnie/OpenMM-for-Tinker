@@ -4460,11 +4460,22 @@ void CudaCalcGKCavitationForceKernel::executeInitKernels(ContextImpl &context, b
             ishydrogen[i] = h ? 1 : 0;
         }
         gvol = new GaussVol(numParticles, ishydrogen);
-        vector<float4> posq;
-        cu.getPosq().download(posq);
-        for (int i = 0; i < numParticles; i++) {
-            positions[i] = RealVec((RealOpenMM) posq[i].x, (RealOpenMM) posq[i].y, (RealOpenMM) posq[i].z);
+
+        if (cu.getUseDoublePrecision()){
+            vector<double4> posq;
+            cu.getPosq().download(posq);
+            for (int i = 0; i < numParticles; i++) {
+                positions[i] = RealVec((RealOpenMM) posq[i].x, (RealOpenMM) posq[i].y, (RealOpenMM) posq[i].z);
+            }
         }
+        else{
+            vector<float4> posq;
+            cu.getPosq().download(posq);
+            for (int i = 0; i < numParticles; i++) {
+                positions[i] = RealVec((RealOpenMM) posq[i].x, (RealOpenMM) posq[i].y, (RealOpenMM) posq[i].z);
+            }
+        }
+
         vector<RealOpenMM> volumes(numParticles);
         for (int i = 0; i < numParticles; i++) {
             volumes[i] = 4. * M_PI * pow(radii[i], 3) / 3.;
