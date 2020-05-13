@@ -134,7 +134,7 @@ void AmoebaReferenceGeneralizedKirkwoodForce::getGrycukBornRadii(vector<double> 
 
 void AmoebaReferenceGeneralizedKirkwoodForce::calculateGrycukBornRadii(const vector<Vec3> &particlePositions) {
 
-    const double bigRadius = 1000.0;
+    const double bigRadius = 50.0;
 
     _bornRadii.resize(_numParticles);
     for (unsigned int ii = 0; ii < _numParticles; ii++) {
@@ -207,6 +207,4 @@ void AmoebaReferenceGeneralizedKirkwoodForce::calculateGrycukBornRadii(const vec
             _bornRadii[ii] = _atomicRadii[ii];
         }
     }
-
-    return;
 }
