@@ -14,13 +14,20 @@ reduceBornSum(const long long *__restrict__ bornSum, const float2 *__restrict__ 
         float radius = params[index].x;
         radius = RECIP(radius * radius * radius);
         sum = radius - sum;
-        sum = (sum <= 0 ? 50.0f : POW(sum, -1.0f / 3.0f));
+        // If the sum is less than zero, set the Born radius to 50.0 Angstroms.
+        float bigRadius = 5.0f
+        sum = (sum <= 0 ? bigRadius : POW(sum, -1.0f / 3.0f));
         bornRadii[index] = sum;
 
         // Born radius should be at least as large as its base radius.
         radius = params[index].x;
         if (bornRadii[index] < radius) {
             bornRadii[index] = radius;
+        }
+
+        // Maximum Born radius is 50.0 Angstroms.
+        if (bornRadii[index] > bigRadius) {
+            bornRadii[index] = bigRadius;
         }
     }
 }
@@ -471,7 +478,9 @@ __device__ void computeBornChainRuleInteraction(AtomData3 &atom1, AtomData3 &ato
     real r = SQRT(r2);
     real de = 0;
 
-    if (atom1.radius > r + sk || atom1.bornRadius >= 50.0) {
+    // Maximum Born radius is 50.0 Angstroms
+    float bigRadius = 5.0;
+    if (atom1.radius > r + sk || atom1.bornRadius >= bigRadius) {
         // No descreening due to atom1 engulfing atom2.
         force = delta * de;
         return;

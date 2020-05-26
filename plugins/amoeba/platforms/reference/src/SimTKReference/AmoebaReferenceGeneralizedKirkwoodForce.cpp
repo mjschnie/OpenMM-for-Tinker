@@ -23,6 +23,7 @@
 
 #include "AmoebaReferenceGeneralizedKirkwoodForce.h"
 #include <cmath>
+#include <iostream>
 
 using std::vector;
 using namespace OpenMM;
@@ -134,7 +135,9 @@ void AmoebaReferenceGeneralizedKirkwoodForce::getGrycukBornRadii(vector<double> 
 
 void AmoebaReferenceGeneralizedKirkwoodForce::calculateGrycukBornRadii(const vector<Vec3> &particlePositions) {
 
-    const double bigRadius = 50.0;
+    // Set the radius to 50 Angstroms (5 nm) if either the base radius is zero, or the
+    // descreening integral is negative.
+    const double bigRadius = 5.0;
 
     _bornRadii.resize(_numParticles);
     for (unsigned int ii = 0; ii < _numParticles; ii++) {
@@ -202,9 +205,14 @@ void AmoebaReferenceGeneralizedKirkwoodForce::calculateGrycukBornRadii(const vec
 
         _bornRadii[ii] = (bornSum <= 0.0) ? bigRadius : pow(bornSum, -1.0 / 3.0);
 
-        // Born radius should be at least as large as its base radius.
+        // Born radius must be at least as large as its base radius.
         if (_bornRadii[ii] < _atomicRadii[ii]) {
             _bornRadii[ii] = _atomicRadii[ii];
+        }
+
+        // Maximum Born radius is 50.0 Angstroms.
+        if (_bornRadii[ii] > bigRadius) {
+            _bornRadii[ii] = bigRadius;
         }
     }
 }
