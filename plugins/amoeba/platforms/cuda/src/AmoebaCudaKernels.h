@@ -1033,29 +1033,16 @@ private:
         OpenMM::CudaArray *gammaParam1;
         OpenMM::CudaArray *gammaParam2;
         OpenMM::CudaArray *ishydrogenParam;
-        OpenMM::CudaArray *chargeParam;
-        OpenMM::CudaArray *alphaParam;
 
         //C++ vectors corresponding to parameter buffers above
         std::vector<float> radiusVector1; //enlarged radii
         std::vector<float> radiusVector2; //vdw radii
         std::vector<float> gammaVector1;  //gamma/radius_offset
         std::vector<float> gammaVector2;  //-gamma/radius_offset
-        std::vector<float> chargeVector;  //charge
-        std::vector<float> alphaVector;   //alpha vdw parameter
         std::vector<int> ishydrogenVector;
         OpenMM::CudaArray *selfVolume; //vdw radii
         OpenMM::CudaArray *selfVolumeLargeR; //large radii
         OpenMM::CudaArray *Semaphor;
-        OpenMM::CudaArray *volScalingFactor;
-        OpenMM::CudaArray *BornRadius;
-        OpenMM::CudaArray *invBornRadius;
-        OpenMM::CudaArray *invBornRadius_fp;
-        OpenMM::CudaArray *GBDerY;
-        OpenMM::CudaArray *GBDerBrU;
-        OpenMM::CudaArray *GBDerU;
-        OpenMM::CudaArray *VdWDerBrW;
-        OpenMM::CudaArray *VdWDerW;
         OpenMM::CudaArray *grad;
 
         CUfunction resetBufferKernel;
@@ -1105,8 +1092,7 @@ private:
         //flag to give up
         OpenMM::CudaArray *PanicButton;
         std::vector<int> panic_button;
-        //buffer *pinnedPanicButtonBuffer;
-        int *pinnedPanicButtonMemory;
+        int *pinnedPanicButtonBuffer;
         CUevent downloadPanicButtonEvent;
     };
 

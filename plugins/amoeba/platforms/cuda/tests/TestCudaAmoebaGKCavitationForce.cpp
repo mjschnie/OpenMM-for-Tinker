@@ -1,26 +1,28 @@
-//
-// Created by Thiel, Andrew on 2019-06-07.
-//
-#define _USE_MATH_DEFINES // Needed to get M_PI
+/* -------------------------------------------------------------------------- *
+ *                              OpenMM-GKCavitation                                 *
+ * -------------------------------------------------------------------------- */
 
-#include "OpenMM.h"
+/**
+ * This tests the CUDA implementation of GKNPForce.
+ */
+
+#define _USE_MATH_DEFINES // Needed to get M_PI
+#include "openmm/AmoebaGKCavitationForce.h"
+#include "openmm/internal/AssertionUtilities.h"
 #include "openmm/Context.h"
 #include "openmm/Platform.h"
 #include "openmm/System.h"
 #include "openmm/VerletIntegrator.h"
-#include "openmm/AmoebaGKCavitationForce.h"
-#include <iosfwd>
-#include <map>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <iomanip>
+#include "openmm/NonbondedForce.h"
 #include <cmath>
+#include <iostream>
+#include <vector>
+#include <iomanip>
 
 using namespace OpenMM;
 using namespace std;
 
-extern "C" OPENMM_EXPORT void registerAmoebaReferenceKernelFactories();
+extern "C" OPENMM_EXPORT void registerAmoebaCudaKernelFactories();
 
 static struct MyAtomInfo {
     const char *pdb;
@@ -40,11 +42,11 @@ static struct MyAtomInfo {
         {""} // end of list
 };
 
-void testEnergy() {
+void testForce() {
 
     System system;
     NonbondedForce *nb = new NonbondedForce();
-    AmoebaGKCavitationForce *force = new AmoebaGKCavitationForce();
+    AmoebaGKCavitationForce* force = new AmoebaGKCavitationForce();
     force->setNonbondedMethod(AmoebaGKCavitationForce::NoCutoff);//NoCutoff also accepted
     force->setCutoffDistance(1.0);
     system.addForce(nb);
@@ -64,13 +66,12 @@ void testEnergy() {
         atoms[i].vdwRadiusInAng *= ang2nm;
         atoms[i].gamma *= kcalmol2kjmol / (ang2nm * ang2nm);
         nb->addParticle(0.0, 0.0, 0.0);
-        force->addParticle(atoms[i].vdwRadiusInAng, atoms[i].gamma, 0.0, 0.0, atoms[i].isHydrogen);
-        double dummy;
-        force->getParticleParameters(i, atoms[i].vdwRadiusInAng, atoms[i].gamma, dummy, dummy, atoms[i].isHydrogen);
+        force->addParticle(atoms[i].vdwRadiusInAng, atoms[i].gamma, atoms[i].isHydrogen);
+        force->getParticleParameters(i, atoms[i].vdwRadiusInAng, atoms[i].gamma, atoms[i].isHydrogen);
     }
 
     VerletIntegrator integ(1.0);
-    Platform &platform = Platform::getPlatformByName("Reference");
+    Platform& platform = Platform::getPlatformByName("CUDA");
 
     Context context(system, integ, platform);
     context.setPositions(positions);
@@ -84,18 +85,13 @@ void testEnergy() {
     //  Force Field X Values:
     //  Surface Area:          62.426 (Ang^2)
     //  Surface Area Energy:    6.430 (kcal/mol)
-    //  Current OpenMM Ref Values:
-    //  Surface Area:            62.558388 (Ang^2)
-    //  Surface Area Energy:     6.443514 (kcal/mol)
 
     cout << endl;
     cout << std::setw(25) << std::left << "Surface Area: " << std::fixed << surfaceArea << " (Ang^2)" << endl;
-    cout << std::setw(25) << std::left << "Surface Area Energy:  " << surfaceAreaEnergy << " (kcal/mol)" << endl
-         << endl;
+    cout << std::setw(25) << std::left << "Surface Area Energy:  " << surfaceAreaEnergy << " (kcal/mol)" << endl << endl;
 
-    // TODO: Replace these with assert statements.
 //    cout << "Forces: " << endl;
-//    for (int i = 0; i < numParticles; i++) {
+//    for(int i = 0; i < numParticles; i++) {
 //        cout << "FW: " << i << " " << state.getForces()[i][0] << " " << state.getForces()[i][1] << " "
 //             << state.getForces()[i][2] << " " << endl;
 //    }
@@ -118,12 +114,13 @@ void testEnergy() {
 
 int main() {
     try {
-        registerAmoebaReferenceKernelFactories();
-        testEnergy();
+        registerAmoebaCudaKernelFactories();
+        testForce();
     }
-    catch (const std::exception &e) {
+    catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
         return 1;
     }
     return 0;
 }
+
