@@ -28,7 +28,9 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  *
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
-
+#ifdef WIN32
+#define _USE_MATH_DEFINES // Needed to get M_PI
+#endif
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/internal/AmoebaWcaDispersionForceImpl.h"
 #include "openmm/amoebaKernels.h"

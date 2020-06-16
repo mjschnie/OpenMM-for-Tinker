@@ -4352,9 +4352,9 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
     atom_ishydrogen.resize(cu.getPaddedNumAtoms());
     common_gamma = -1;
     for (int i = 0; i < numParticles; i++) {
-        double radius, gamma, alpha, charge;
+        double radius, gamma;
         bool ishydrogen;
-        force.getParticleParameters(i, radius, gamma, alpha);
+        force.getParticleParameters(i, radius, gamma, ishydrogen);
         radiusVector1[i] = (float) radius + roffset;
         radiusVector2[i] = (float) radius;
 
@@ -4435,9 +4435,9 @@ void CudaCalcGKCavitationForceKernel::executeInitKernels(ContextImpl &context, b
         vol_dv.resize(numParticles);
 
         for (int i = 0; i < numParticles; i++) {
-            double r, g, alpha, q;
+            double r, g;
             bool h;
-            gvol_force->getParticleParameters(i, r, g, alpha, q, h);
+            gvol_force->getParticleParameters(i, r, g, h);
             radii[i] = r + roffset;
             gammas[i] = g / roffset; //energy_density_param;
             if (h) gammas[i] = 0.0;
@@ -5570,9 +5570,9 @@ void CudaCalcGKCavitationForceKernel::copyParametersToContext(ContextImpl &conte
     if (numParticles == 0)
         return;
     for (int i = 0; i < numParticles; i++) {
-        double radius, gamma, alpha, charge;
+        double radius, gamma;
         bool ishydrogen;
-        force.getParticleParameters(i, radius, gamma, alpha, charge, ishydrogen);
+        force.getParticleParameters(i, radius, gamma, ishydrogen);
         if (pow(radiusVector2[i] - radius, 2) > 1.e-6) {
             throw OpenMMException("updateParametersInContext: GKCavitation plugin does not support changing atomic radii.");
         }
