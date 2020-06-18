@@ -4045,15 +4045,6 @@ CudaCalcGKCavitationForceKernel::CudaCalcGKCavitationForceKernel(std::string nam
     selfVolume = NULL;
     selfVolumeLargeR = NULL;
     Semaphor = NULL;
-    volScalingFactor = NULL;
-    BornRadius = NULL;
-    invBornRadius = NULL;
-    invBornRadius_fp = NULL;
-    GBDerY = NULL;
-    GBDerBrU = NULL;
-    GBDerU = NULL;
-    VdWDerBrW = NULL;
-    VdWDerW = NULL;
     GaussianExponent = NULL;
     GaussianVolume = NULL;
     GaussianExponentLargeR = NULL;
@@ -4061,6 +4052,7 @@ CudaCalcGKCavitationForceKernel::CudaCalcGKCavitationForceKernel(std::string nam
     AtomicGamma = NULL;
     grad = NULL;
     PanicButton = NULL;
+    pinnedPanicButtonBuffer = NULL;
 
 }
 
@@ -4344,8 +4336,6 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
     radiusParam2 = new CudaArray(cu, cu.getPaddedNumAtoms(), sizeof(float), "radiusParam2");
     gammaParam1 = new CudaArray(cu, cu.getPaddedNumAtoms(), sizeof(float), "gammaParam1");
     gammaParam2 = new CudaArray(cu, cu.getPaddedNumAtoms(), sizeof(float), "gammaParam2");
-    chargeParam = new CudaArray(cu, cu.getPaddedNumAtoms(), sizeof(float), "chargeParam");
-    alphaParam = new CudaArray(cu, cu.getPaddedNumAtoms(), sizeof(float), "alphaParam");
     ishydrogenParam = new CudaArray(cu, cu.getPaddedNumAtoms(), sizeof(int), "ishydrogenParam");
 
     // this the accumulation buffer for overlap atom-level data (self-volumes, etc.)
@@ -4358,15 +4348,13 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
     radiusVector2.resize(cu.getPaddedNumAtoms());
     gammaVector1.resize(cu.getPaddedNumAtoms());
     gammaVector2.resize(cu.getPaddedNumAtoms());
-    chargeVector.resize(cu.getPaddedNumAtoms());
-    alphaVector.resize(cu.getPaddedNumAtoms());
     ishydrogenVector.resize(cu.getPaddedNumAtoms());
     atom_ishydrogen.resize(cu.getPaddedNumAtoms());
     common_gamma = -1;
     for (int i = 0; i < numParticles; i++) {
-        double radius, gamma, alpha, charge;
+        double radius, gamma;
         bool ishydrogen;
-        force.getParticleParameters(i, radius, gamma, alpha, charge, ishydrogen);
+        force.getParticleParameters(i, radius, gamma, ishydrogen);
         radiusVector1[i] = (float) radius + roffset;
         radiusVector2[i] = (float) radius;
 
@@ -4375,11 +4363,9 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
 
         // for surface-area energy use gamma/radius_offset
         // gamma = 1 for self volume calculation.
-        double g = ishydrogen ? 0 : gamma / roffset; //TODO: Possible cause of math discrepancy
+        double g = ishydrogen ? 0 : gamma / roffset;
         gammaVector1[i] = (float) g;
         gammaVector2[i] = (float) -g;
-        alphaVector[i] = (float) alpha;
-        chargeVector[i] = (float) charge;
 
         //make sure that all gamma's are the same
         if (common_gamma < 0 && !ishydrogen) {
@@ -4395,8 +4381,6 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
     radiusParam2->upload(radiusVector2);
     gammaParam1->upload(gammaVector1);
     gammaParam2->upload(gammaVector2);
-    alphaParam->upload(alphaVector);
-    chargeParam->upload(chargeVector);
     ishydrogenParam->upload(ishydrogenVector);
     useCutoff = (force.getNonbondedMethod() != AmoebaGKCavitationForce::NoCutoff);
     usePeriodic = (force.getNonbondedMethod() != AmoebaGKCavitationForce::NoCutoff &&
@@ -4451,25 +4435,36 @@ void CudaCalcGKCavitationForceKernel::executeInitKernels(ContextImpl &context, b
         vol_dv.resize(numParticles);
 
         for (int i = 0; i < numParticles; i++) {
-            double r, g, alpha, q;
+            double r, g;
             bool h;
-            gvol_force->getParticleParameters(i, r, g, alpha, q, h);
+            gvol_force->getParticleParameters(i, r, g, h);
             radii[i] = r + roffset;
             gammas[i] = g / roffset; //energy_density_param;
             if (h) gammas[i] = 0.0;
             ishydrogen[i] = h ? 1 : 0;
         }
         gvol = new GaussVol(numParticles, ishydrogen);
-        vector<float4> posq;
-        cu.getPosq().download(posq);
-        for (int i = 0; i < numParticles; i++) {
-            positions[i] = RealVec((RealOpenMM) posq[i].x, (RealOpenMM) posq[i].y, (RealOpenMM) posq[i].z);
+
+        if (cu.getUseDoublePrecision()){
+            vector<double4> posq;
+            cu.getPosq().download(posq);
+            for (int i = 0; i < numParticles; i++) {
+                positions[i] = RealVec((RealOpenMM) posq[i].x, (RealOpenMM) posq[i].y, (RealOpenMM) posq[i].z);
+            }
         }
+        else{
+            vector<float4> posq;
+            cu.getPosq().download(posq);
+            for (int i = 0; i < numParticles; i++) {
+                positions[i] = RealVec((RealOpenMM) posq[i].x, (RealOpenMM) posq[i].y, (RealOpenMM) posq[i].z);
+            }
+        }
+
         vector<RealOpenMM> volumes(numParticles);
         for (int i = 0; i < numParticles; i++) {
             volumes[i] = 4. * M_PI * pow(radii[i], 3) / 3.;
         }
-        //CPU GaussVol really necessary?
+
         gvol->setRadii(radii);
         gvol->setVolumes(volumes);
         gvol->setGammas(gammas);
@@ -4517,29 +4512,6 @@ void CudaCalcGKCavitationForceKernel::executeInitKernels(ContextImpl &context, b
         vector<int> semaphor(cu.getPaddedNumAtoms());
         for (int i = 0; i < cu.getPaddedNumAtoms(); i++) semaphor[i] = 0;
         Semaphor->upload(semaphor);
-        if (volScalingFactor) delete volScalingFactor;
-        volScalingFactor = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(), "volScalingFactor");
-        if (BornRadius) delete BornRadius;
-        BornRadius = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(), "BornRadius");
-        if (invBornRadius) delete invBornRadius;
-        invBornRadius = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(), "invBornRadius");
-        if (invBornRadius_fp) delete invBornRadius_fp;
-        invBornRadius_fp = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(), "invBornRadius_fp");
-        if (GBDerY) delete GBDerY;
-        GBDerY = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(),
-                                          "GBDerY"); //Y intermediate variable for Born radius-dependent GB derivative
-        if (GBDerBrU) delete GBDerBrU;
-        GBDerBrU = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(),
-                                            "GBDerBrU"); //bru variable for Born radius-dependent GB derivative
-        if (GBDerU) delete GBDerU;
-        GBDerU = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(),
-                                          "GBDerU"); //W variable for self-volume-dependent GB derivative
-        if (VdWDerBrW) delete VdWDerBrW;
-        VdWDerBrW = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(),
-                                             "VdWDerBrW"); //brw variable for Born radius-dependent Van der Waals derivative
-        if (VdWDerW) delete VdWDerW;
-        VdWDerW = CudaArray::create<float>(cu, cu.getPaddedNumAtoms(),
-                                           "VdWDerW"); //W variable for self-volume-dependent vdW derivative
 
         //atomic parameters
         if (GaussianExponent) delete GaussianExponent;
@@ -5287,6 +5259,8 @@ double CudaCalcGKCavitationForceKernel::executeGVolSA(ContextImpl &context, bool
                                                       &PanicButton->getDevicePointer()};
         cu.executeKernel(ComputeOverlapTree_1passKernel, ComputeOverlapTree_1passKernelArgs, ov_work_group_size * num_compute_units, ov_work_group_size);}
 
+    PanicButton->download(pinnedPanicButtonBuffer, false);
+    cuEventRecord(downloadPanicButtonEvent, cu.getCurrentStream());
 
     //------------------------------------------------------------------------------------------------------------
 
@@ -5310,6 +5284,19 @@ double CudaCalcGKCavitationForceKernel::executeGVolSA(ContextImpl &context, bool
                                         &PanicButton->getDevicePointer()};
         cu.executeKernel(resetSelfVolumesKernel, resetSelfVolumesArgs, ov_work_group_size * num_compute_units, ov_work_group_size);}
 
+    //TODO: Panic Button?
+    //check the result of the non-blocking read of PanicButton above
+    cuEventSynchronize(downloadPanicButtonEvent);
+    if (panic_button[0] > 0) {
+        hasInitializedKernels = false; //forces reinitialization
+        cu.setForcesValid(false); //invalidate forces
+
+        if (panic_button[1] > 0) {
+            gtree->hasExceededTempBuffer = true;//forces resizing of temp buffers
+        }
+
+        return 0.0;
+    }
 
     //Execute computeSelfVolumesKernel
     {
@@ -5373,24 +5360,6 @@ double CudaCalcGKCavitationForceKernel::executeGVolSA(ContextImpl &context, bool
                                                     &cu.getForce().getDevicePointer(),
                                                     &cu.getEnergyBuffer().getDevicePointer()};
         cu.executeKernel(updateSelfVolumesForcesKernel, updateSelfVolumesForcesKernelArgs, ov_work_group_size * num_compute_units, ov_work_group_size);}
-
-    if (false) {
-        vector<int> size(gtree->num_sections);
-        vector<int> niter(gtree->num_sections);
-        gtree->ovAtomTreeSize->download(size);
-        cout << "Sizes: ";
-        for (int section = 0; section < gtree->num_sections; section++) {
-            std::cout << size[section] << " ";
-        }
-        std::cout << endl;
-        gtree->NIterations->download(niter);
-        cout << "Niter: ";
-        for (int section = 0; section < gtree->num_sections; section++) {
-            std::cout << niter[section] << " ";
-        }
-        std::cout << endl;
-
-    }
 
     vector<int> atom_pointer;
     vector<float> vol_energies;
@@ -5601,9 +5570,9 @@ void CudaCalcGKCavitationForceKernel::copyParametersToContext(ContextImpl &conte
     if (numParticles == 0)
         return;
     for (int i = 0; i < numParticles; i++) {
-        double radius, gamma, alpha, charge;
+        double radius, gamma;
         bool ishydrogen;
-        force.getParticleParameters(i, radius, gamma, alpha, charge, ishydrogen);
+        force.getParticleParameters(i, radius, gamma, ishydrogen);
         if (pow(radiusVector2[i] - radius, 2) > 1.e-6) {
             throw OpenMMException("updateParametersInContext: GKCavitation plugin does not support changing atomic radii.");
         }
@@ -5615,13 +5584,9 @@ void CudaCalcGKCavitationForceKernel::copyParametersToContext(ContextImpl &conte
         double g = ishydrogen ? 0 : gamma / roffset;
         gammaVector1[i] = (float) g;
         gammaVector2[i] = (float) -g;
-        alphaVector[i] = (float) alpha;
-        chargeVector[i] = (float) charge;
     }
     gammaParam1->upload(gammaVector1);
     gammaParam2->upload(gammaVector2);
-    alphaParam->upload(alphaVector);
-    chargeParam->upload(chargeVector);
 }
 
 

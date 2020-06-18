@@ -1469,8 +1469,6 @@ void ReferenceCalcGKCavitationForceKernel::initialize(const System& system, cons
     radii_large.resize(numParticles);//van der Waals radii + offset (large radii)
     radii_vdw.resize(numParticles);//van der Waals radii (small radii)
     gammas.resize(numParticles);
-    vdw_alpha.resize(numParticles);
-    charge.resize(numParticles);
     ishydrogen.resize(numParticles);
 
     //output lists
@@ -1489,14 +1487,12 @@ void ReferenceCalcGKCavitationForceKernel::initialize(const System& system, cons
     for (int i = 0; i < numParticles; i++){
         double r, g, alpha, q;
         bool h;
-        force.getParticleParameters(i, r, g, alpha, q, h);
+        force.getParticleParameters(i, r, g, h);
         radii_large[i] = r + roffset;
         radii_vdw[i] = r;
         vdwrad[i] = r; //double version for lookup table setup
         gammas[i] = g;
         if(h) gammas[i] = 0.0;
-        vdw_alpha[i] = alpha;
-        charge[i] = q;
         ishydrogen[i] = h ? 1 : 0;
         //make sure that all gamma's are the same
         if(common_gamma < 0 && !h){
@@ -1529,9 +1525,9 @@ void ReferenceCalcGKCavitationForceKernel::copyParametersToContext(ContextImpl& 
         throw OpenMMException("updateParametersInContext: The number of GKCavitation particles has changed");
 
     for (int i = 0; i < numParticles; i++){
-        double r, g, alpha, q;
+        double r, g;
         bool h;
-        force.getParticleParameters(i, r, g, alpha, q, h);
+        force.getParticleParameters(i, r, g, h);
         if(pow(radii_vdw[i]-r,2) > 1.e-6){
             throw OpenMMException("updateParametersInContext: GKCavitation plugin does not support changing atomic radii.");
         }
@@ -1540,7 +1536,5 @@ void ReferenceCalcGKCavitationForceKernel::copyParametersToContext(ContextImpl& 
         }
         gammas[i] = g;
         if(h) gammas[i] = 0.0;
-        vdw_alpha[i] = alpha;
-        charge[i] = q;
     }
 }

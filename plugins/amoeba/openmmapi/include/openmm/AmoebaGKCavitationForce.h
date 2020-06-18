@@ -61,7 +61,7 @@ public:
      * @param ishydrogen  if true, this particle is a hydrogen atom (does not contribute to volume)
      * @return the index of the particle that was added
      */
-    int addParticle(double radius, double gamma, double vdw_alpha, double charge, bool ishydrogen);
+    int addParticle(double radius, double gamma, bool ishydrogen);
 
     /**
      * Modify the parameters of a particle to GKCavitation
@@ -74,7 +74,7 @@ public:
      * @param ishydrogen  if true, this particle is a hydrogen atom (does not contribute to volume)
      * @return the index of the particle that was added
      */
-    void setParticleParameters(int index, double radius, double gamma, double vdw_alpha, double charge, bool ishydrogen);
+    void setParticleParameters(int index, double radius, double gamma, bool ishydrogen);
     
     /**
      * Get the GKCavitation parameters for a particle
@@ -86,8 +86,7 @@ public:
      * @param charge      electric charge
      * @param ishydrogen  if true, this particle is a hydrogen atom
      */
-    void getParticleParameters(int index, double& radius, double& gamma,  double& vdw_alpha, double &charge,
-			       bool& ishydrogen) const;
+    void getParticleParameters(int index, double& radius, double& gamma, bool& ishydrogen) const;
     /**
      * Get the number of particles defined for GKCavitation
      */
@@ -136,16 +135,14 @@ private:
 class AmoebaGKCavitationForce::ParticleInfo {
  public:
   bool ishydrogen;
-  double radius, gamma, vdw_alpha, charge;
+  double radius, gamma;
   ParticleInfo() {
     ishydrogen = false;
     radius = 0.15;
     gamma = 0.0;
-    charge = 0.0;
-    vdw_alpha = 0.0;
   }
- ParticleInfo(double radius, double gamma, double vdw_alpha, double charge, bool ishydrogen) :
-  radius(radius), gamma(gamma), vdw_alpha(vdw_alpha), charge(charge), ishydrogen(ishydrogen) {  }
+ ParticleInfo(double radius, double gamma, bool ishydrogen) :
+  radius(radius), gamma(gamma), ishydrogen(ishydrogen) {  }
  };
  
 } // namespace OpenMM
