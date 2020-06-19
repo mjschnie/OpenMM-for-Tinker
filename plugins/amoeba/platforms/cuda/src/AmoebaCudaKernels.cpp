@@ -4054,10 +4054,13 @@ CudaCalcGKCavitationForceKernel::CudaCalcGKCavitationForceKernel(std::string nam
     PanicButton = NULL;
     pinnedPanicButtonBuffer = NULL;
 
+    CHECK_RESULT(cuMemHostAlloc((void**) &pinnedPanicButtonBuffer, 2*sizeof(int), CU_MEMHOSTALLOC_PORTABLE), "Error allocating PanicButton pinned buffer");
+
 }
 
 CudaCalcGKCavitationForceKernel::~CudaCalcGKCavitationForceKernel() {
     if (gtree != NULL) delete gtree;
+    if (pinnedPanicButtonBuffer != NULL) cuMemFreeHost(pinnedPanicButtonBuffer);
 }
 
 //version based on number of overlaps for each atom
@@ -5287,11 +5290,11 @@ double CudaCalcGKCavitationForceKernel::executeGVolSA(ContextImpl &context, bool
     //TODO: Panic Button?
     //check the result of the non-blocking read of PanicButton above
     cuEventSynchronize(downloadPanicButtonEvent);
-    if (panic_button[0] > 0) {
+    if (pinnedPanicButtonBuffer[0] > 0) {
         hasInitializedKernels = false; //forces reinitialization
         cu.setForcesValid(false); //invalidate forces
 
-        if (panic_button[1] > 0) {
+        if (pinnedPanicButtonBuffer[1] > 0) {
             gtree->hasExceededTempBuffer = true;//forces resizing of temp buffers
         }
 
