@@ -4389,6 +4389,7 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
     useExclusions = false;
     cutoffDistance = force.getCutoffDistance();
     gtree = new CudaOverlapTree;//instance of atomic overlap tree
+    CHECK_RESULT(cuEventCreate(&downloadPanicButtonEvent, 0), "Error creating event for GK cavitation force");
     CHECK_RESULT(cuMemHostAlloc((void**) &pinnedPanicButtonMemory, 2 * sizeof(int), CU_MEMHOSTALLOC_PORTABLE), "Error allocating PanicButton pinned buffer");
     gvol_force = &force;
     niterations = 0;
