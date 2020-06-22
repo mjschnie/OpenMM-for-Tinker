@@ -1092,7 +1092,7 @@ private:
         //flag to give up
         OpenMM::CudaArray *PanicButton;
         std::vector<int> panic_button;
-        int *pinnedPanicButtonBuffer;
+        int *pinnedPanicButtonMemory;
         CUevent downloadPanicButtonEvent;
     };
 
