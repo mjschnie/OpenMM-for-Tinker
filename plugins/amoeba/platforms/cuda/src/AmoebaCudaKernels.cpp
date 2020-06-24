@@ -4052,12 +4052,13 @@ CudaCalcGKCavitationForceKernel::CudaCalcGKCavitationForceKernel(std::string nam
     AtomicGamma = NULL;
     grad = NULL;
     PanicButton = NULL;
-    pinnedPanicButtonBuffer = NULL;
-
+    pinnedPanicButtonMemory = NULL;
 }
 
 CudaCalcGKCavitationForceKernel::~CudaCalcGKCavitationForceKernel() {
     if (gtree != NULL) delete gtree;
+    if (pinnedPanicButtonMemory != NULL) cuMemFreeHost(pinnedPanicButtonMemory);
+    cuEventDestroy(downloadPanicButtonEvent);
 }
 
 //version based on number of overlaps for each atom
@@ -4388,6 +4389,8 @@ void CudaCalcGKCavitationForceKernel::initialize(const System &system, const Amo
     useExclusions = false;
     cutoffDistance = force.getCutoffDistance();
     gtree = new CudaOverlapTree;//instance of atomic overlap tree
+    CHECK_RESULT(cuEventCreate(&downloadPanicButtonEvent, 0), "Error creating event for GK cavitation force");
+    CHECK_RESULT(cuMemHostAlloc((void**) &pinnedPanicButtonMemory, 2 * sizeof(int), CU_MEMHOSTALLOC_PORTABLE), "Error allocating PanicButton pinned buffer");
     gvol_force = &force;
     niterations = 0;
     hasInitializedKernels = false;
@@ -5259,7 +5262,7 @@ double CudaCalcGKCavitationForceKernel::executeGVolSA(ContextImpl &context, bool
                                                       &PanicButton->getDevicePointer()};
         cu.executeKernel(ComputeOverlapTree_1passKernel, ComputeOverlapTree_1passKernelArgs, ov_work_group_size * num_compute_units, ov_work_group_size);}
 
-    PanicButton->download(pinnedPanicButtonBuffer, false);
+    PanicButton->download(pinnedPanicButtonMemory, false);
     cuEventRecord(downloadPanicButtonEvent, cu.getCurrentStream());
 
     //------------------------------------------------------------------------------------------------------------
@@ -5287,11 +5290,11 @@ double CudaCalcGKCavitationForceKernel::executeGVolSA(ContextImpl &context, bool
     //TODO: Panic Button?
     //check the result of the non-blocking read of PanicButton above
     cuEventSynchronize(downloadPanicButtonEvent);
-    if (panic_button[0] > 0) {
+    if (pinnedPanicButtonMemory[0] > 0) {
         hasInitializedKernels = false; //forces reinitialization
         cu.setForcesValid(false); //invalidate forces
 
-        if (panic_button[1] > 0) {
+        if (pinnedPanicButtonMemory[1] > 0) {
             gtree->hasExceededTempBuffer = true;//forces resizing of temp buffers
         }
 
